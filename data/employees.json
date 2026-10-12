@@ -1,0 +1,60 @@
+[
+    {
+        "id": 1,
+        "name": "Rahul",
+        "domain": "Backend",
+        "skills": [
+            "Python",
+            "SQL",
+            "FastAPI"
+        ],
+        "workload": 20,
+        "available": true
+    },
+    {
+        "id": 2,
+        "name": "Amit",
+        "domain": "Backend",
+        "skills": [
+            "Python",
+            "FastAPI"
+        ],
+        "workload": 35,
+        "available": true
+    },
+    {
+        "id": 3,
+        "name": "Rohan",
+        "domain": "Backend",
+        "skills": [
+            "Python",
+            "SQL"
+        ],
+        "workload": 60,
+        "available": true
+    },
+    {
+        "id": 4,
+        "name": "Priya",
+        "domain": "Frontend",
+        "skills": [
+            "HTML",
+            "CSS",
+            "JavaScript"
+        ],
+        "workload": 30,
+        "available": true
+    },
+    {
+        "id": 5,
+        "name": "Neha",
+        "domain": "Backend",
+        "skills": [
+            "Python",
+            "FastAPI",
+            "SQL"
+        ],
+        "workload": 25,
+        "available": false
+    }
+]

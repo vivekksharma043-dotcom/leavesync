@@ -1,0 +1,11 @@
+[
+    {
+        "id": 1,
+        "employee_id": 1,
+        "employee_name": "Rahul",
+        "from_date": "2026-10-10",
+        "to_date": "2026-10-12",
+        "reason": "Personal",
+        "status": "approved"
+    }
+]

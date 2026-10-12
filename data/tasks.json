@@ -1,0 +1,46 @@
+[
+    {
+        "id": 101,
+        "title": "Develop Login API",
+        "assigned_to": 2,
+        "domain": "Backend",
+        "required_skills": [
+            "Python",
+            "FastAPI"
+        ],
+        "status": "reassigned",
+        "previous_assignee": 1
+    },
+    {
+        "id": 102,
+        "title": "Database Optimization",
+        "assigned_to": 3,
+        "domain": "Backend",
+        "required_skills": [
+            "Python",
+            "SQL"
+        ],
+        "status": "reassigned",
+        "previous_assignee": 1
+    },
+    {
+        "id": 103,
+        "title": "Write API Documentation",
+        "assigned_to": 1,
+        "domain": "Backend",
+        "required_skills": [
+            "Python"
+        ],
+        "status": "completed"
+    },
+    {
+        "id": 104,
+        "title": "Fix Search Bug",
+        "assigned_to": 2,
+        "domain": "Backend",
+        "required_skills": [
+            "Python"
+        ],
+        "status": "pending"
+    }
+]

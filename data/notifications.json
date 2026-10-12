@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "employee_id": 2,
+        "message": "You have been assigned the task: Develop Login API",
+        "task_id": 101,
+        "status": "unread"
+    },
+    {
+        "id": 2,
+        "employee_id": 3,
+        "message": "You have been assigned the task: Database Optimization",
+        "task_id": 102,
+        "status": "unread"
+    }
+]
