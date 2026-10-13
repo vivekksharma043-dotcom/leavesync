@@ -1,170 +1,347 @@
+
+
+from module.leave_management import (
+    apply_leave,
+    view_leave_requests as get_leave_requests,
+    review_leave,
+)
+
+
 from module.work_coverage import (
     load_employees,
     load_tasks,
     load_leave_requests,
     load_notifications,
-    save_json,
+    automate_work_coverage,
 )
 
-employees = load_employees()
-tasks = load_tasks()
-leaves = load_leave_requests()
-notifications = load_notifications()
 
-print("Employees loaded:", len(employees))
-print("Tasks loaded:", len(tasks))
-print("Leave requests loaded:", len(leaves))
-print("Notifications loaded:", len(notifications))
+def view_employees():
+    """Display all employees."""
+    employees = load_employees()
 
-print("First employee:", employees[0]["name"])
-print("First task:", tasks[0]["title"])
+    print("\n--- EMPLOYEE DIRECTORY ---")
 
-# Save test: write notifications back unchanged (safe, nothing changes)
-print("Save worked:", save_json("notifications.json", notifications))
+    if not employees:
+        print("No employees found.")
+        return
 
-from module.work_coverage import process_approved_leaves
-#phase 2
-print("--- Phase 2 test ---")
-#process_approved_leaves()
+    for employee in employees:
+        print(
+            f"ID: {employee['id']} | "
+            f"Name: {employee['name']} | "
+            f"Domain: {employee['domain']} | "
+            f"Workload: {employee['workload']}%"
+        )
 
-from module.work_coverage import find_pending_tasks
 
-print("--- Phase 3 test ---")
-pending = find_pending_tasks(1)
-print("Pending tasks for employee 1:", len(pending))
-for task in pending:
-    print("-", task["id"], task["title"])
+def view_leave_requests():
+    """Display all leave requests."""
+    leaves = load_leave_requests()
 
-print("Pending tasks for employee 99:", len(find_pending_tasks(99)))
-#aviable employee
+    print("\n--- LEAVE REQUESTS ---")
 
-from module.work_coverage import find_available_employees
+    if not leaves:
+        print("No leave requests found.")
+        return
 
-print("--- Phase 4 test ---")
-candidates = find_available_employees(1)
-print("Candidates found:", len(candidates))
-for person in candidates:
-    print("-", person["name"], "(ID", person["id"], ")")
+    for leave in leaves:
+        print(
+            f"ID: {leave['id']} | "
+            f"Employee: {leave['employee_name']} | "
+            f"From: {leave['from_date']} | "
+            f"To: {leave['to_date']} | "
+            f"Status: {leave['status']}"
+        )
 
-print("Candidates for Priya (Frontend):", len(find_available_employees(4)))
-from module.work_coverage import calculate_skill_match
 
-from module.work_coverage import calculate_skill_match
+def view_tasks():
+    """Display all tasks."""
+    tasks = load_tasks()
 
-print("--- Phase 5 test ---")
-required = ["Python", "FastAPI"]
+    print("\n--- TASKS ---")
 
-print("Candidate with Python, SQL:", calculate_skill_match(required, ["Python", "SQL"]))
-print("Candidate with Python, FastAPI, SQL:", calculate_skill_match(required, ["Python", "FastAPI", "SQL"]))
-print("Candidate with HTML, CSS:", calculate_skill_match(required, ["HTML", "CSS"]))
-print("Lowercase skills:", calculate_skill_match(required, ["python", "fastapi"]))
-print("Task needing no skills:", calculate_skill_match([], ["Python"]))
+    if not tasks:
+        print("No tasks found.")
+        return
 
-from module.work_coverage import calculate_workload_score
+    for task in tasks:
+        print(
+            f"ID: {task['id']} | "
+            f"Title: {task['title']} | "
+            f"Assigned to: {task['assigned_to']} | "
+            f"Status: {task['status']}"
+        )
 
-print("--- Phase 6 test ---")
-for load in [0, 20, 39, 40, 60, 79, 80, 95]:
-    print("Workload", load, "-> score", calculate_workload_score(load))
 
-    from module.work_coverage import calculate_coverage_score
+def view_notifications():
+    """Display all notifications."""
+    notifications = load_notifications()
 
-print("--- Phase 7 test ---")
-print("Roadmap example (100, 80, 70):", calculate_coverage_score(100, 80, 70))
-print("Perfect candidate (100, 100, 100):", calculate_coverage_score(100, 100, 100))
-print("No skills (100, 0, 100):", calculate_coverage_score(100, 0, 100))
+    print("\n--- NOTIFICATIONS ---")
 
-# Compare two real candidates for a task needing Python and FastAPI
-required = ["Python", "FastAPI"]
+    if not notifications:
+        print("No notifications found.")
+        return
 
-amit_skill = calculate_skill_match(required, ["Python", "FastAPI"])
-amit_load = calculate_workload_score(35)
-print("Amit:", calculate_coverage_score(100, amit_skill, amit_load))
+    for notification in notifications:
+        print(
+            f"ID: {notification['id']} | "
+            f"Employee ID: {notification['employee_id']} | "
+            f"Status: {notification['status']} | "
+            f"Message: {notification['message']}"
+        )
 
-rohan_skill = calculate_skill_match(required, ["Python", "SQL"])
-rohan_load = calculate_workload_score(60)
-print("Rohan:", calculate_coverage_score(100, rohan_skill, rohan_load))
 
-from module.work_coverage import select_best_employee
+def run_coverage():
+    """Run existing work-coverage automation for an employee."""
+    try:
+        employee_id = int(input("Enter employee ID: "))
+    except ValueError:
+        print("Invalid input. Enter a numeric employee ID.")
+        return
 
-print("--- Phase 8 test ---")
-candidates = find_available_employees(1)
-for task in find_pending_tasks(1):
-    best = select_best_employee(task, candidates)
-    if best == "No suitable employee found":
-        print(task["title"], "->", best)
-    else:
-        print(task["title"], "-> Best:", best["name"])
+    employees = load_employees()
 
-# Overloaded candidate should be ignored
-overloaded = [{"id": 9, "name": "Busy", "skills": ["Python", "FastAPI"], "workload": 85}]
-print("Overloaded only:", select_best_employee(find_pending_tasks(1)[0], overloaded))
+    if not any(employee["id"] == employee_id for employee in employees):
+        print("Employee not found.")
+        return
 
-# No candidates at all
-print("Empty list:", select_best_employee(find_pending_tasks(1)[0], []))
+    confirm = input(
+        "This may change tasks.json and notifications.json. "
+        "Continue? (y/n): "
+    ).strip().lower()
 
-from module.work_coverage import assign_task
+    if confirm != "y":
+        print("Coverage process cancelled.")
+        return
 
-print("--- Phase 9 test ---")
-original_tasks = load_tasks()   # backup, so this test leaves tasks.json unchanged
+    result = automate_work_coverage(employee_id)
 
-updated = assign_task(101, 2)
-print("Reassigned task:", updated["id"], updated["title"])
-print("assigned_to:", updated["assigned_to"])
-print("previous_assignee:", updated["previous_assignee"])
-print("status:", updated["status"])
+    print("\n--- COVERAGE SUMMARY ---")
+    print("Reassigned:", len(result["reassigned"]))
+    print("Unassigned:", len(result["unassigned"]))
 
-print("Second attempt:", assign_task(101, 3))
-print("Unknown task:", assign_task(999, 2))
+    
+def apply_leave_menu():
+    try:
+        employee_id = int(input("Enter employee ID: "))
+    except ValueError:
+        print("Invalid employee ID. Enter a number.")
+        return
 
-save_json("tasks.json", original_tasks)   # restore the original data
-print("tasks.json restored")
+    from_date = input("Leave start date (YYYY-MM-DD): ").strip()
+    to_date = input("Leave end date (YYYY-MM-DD): ").strip()
+    reason = input("Reason for leave: ").strip()
 
-from module.work_coverage import create_notification, view_notifications, mark_notification_as_read
+    result = apply_leave(employee_id, from_date, to_date, reason)
+    print(result["message"])
 
-print("--- Phase 10 test ---")
-original_notifications = load_notifications()   # backup, restored at the end
-all_tasks = load_tasks()
+    if result.get("success"):
+        print("Request ID:", result["request"]["id"])
 
-n1 = create_notification(2, all_tasks[0])
-n2 = create_notification(2, all_tasks[1])
-print("Created notification", n1["id"], "for employee 2")
-print("Created notification", n2["id"], "for employee 2")
 
-mine = view_notifications(2)
-print("Notifications for employee 2:", len(mine))
-for n in mine:
-    print("-", n["id"], n["status"], "|", n["message"])
+def view_leave_menu():
+    print("\n1. View all requests")
+    print("2. View pending requests")
+    print("3. View approved requests")
+    print("4. View rejected requests")
 
-print("Notifications for employee 3:", len(view_notifications(3)))
+    choice = input("Choose an option: ").strip()
 
-print("Marked as read:", mark_notification_as_read(n1["id"]))
-for n in view_notifications(2):
-    print("-", n["id"], n["status"])
-print("Unknown notification:", mark_notification_as_read(999))
+    statuses = {
+        "1": None,
+        "2": "pending",
+        "3": "approved",
+        "4": "rejected",
+    }
 
-save_json("notifications.json", original_notifications)   # restore
-print("notifications.json restored")
+    if choice not in statuses:
+        print("Invalid choice.")
+        return
 
-from module.work_coverage import automate_work_coverage
+    requests = get_leave_requests(statuses[choice])
 
-print("--- Phase 11 test ---")
-backup_tasks = load_tasks()
-backup_notifications = load_notifications()
+    if not requests:
+        print("No leave requests found.")
+        return
 
-summary = automate_work_coverage(1)
-print("Reassigned:", len(summary["reassigned"]), "| Unassigned:", len(summary["unassigned"]))
+    for request in requests:
+        print(
+            f"ID: {request['id']} | "
+            f"Employee: {request['employee_name']} | "
+            f"Dates: {request['from_date']} to {request['to_date']} | "
+            f"Status: {request['status']}"
+        )
 
-print("Amit's notifications:", len(view_notifications(2)))
-print("Rohan's notifications:", len(view_notifications(3)))
-for task in load_tasks():
-    print("-", task["id"], task["title"], "->", task["assigned_to"], task["status"])
 
-print("Running again:")
-automate_work_coverage(1)
+def review_leave_menu():
+    requests = get_leave_requests("pending")
+    if not requests:
+        print("No pending requests to review.")
+        return
 
-print("Employee with no tasks:")
-automate_work_coverage(99)
+    for request in requests:
+        print(
+            f"ID: {request['id']} | "
+            f"Employee: {request['employee_name']} | "
+            f"Status: {request['status']}"
+        )
 
-save_json("tasks.json", backup_tasks)
-save_json("notifications.json", backup_notifications)
-print("Data restored")
+    try:
+        request_id = int(input("Enter request ID: "))
+    except ValueError:
+        print("Invalid request ID.")
+        return
+
+    print("1. Approve")
+    print("2. Reject")
+
+    decision = input("Choose an action: ").strip()
+    decisions = {"1": "approved", "2": "rejected"}
+
+    if decision not in decisions:
+        print("Invalid action.")
+        return
+
+    result = review_leave(request_id, decisions[decision])
+    print(result["message"])
+
+
+
+def main():
+    """Run the WorkMesh terminal application."""
+
+    while True:
+        print("\n" + "=" * 40)
+        print("       WORKMESH")
+        print(" Employee Leave & Work Coverage")
+        print("=" * 40)
+        print("1. View Employees")
+        print("2. View Leave Requests")
+        print("3. View Tasks")
+        print("4. View Notifications")
+        print("5. Run Work Coverage")
+        print("6. Apply for Leave")
+        print("7. View Leave Requests")
+        print("8. Review Leave Request")
+        print("0. Exit")
+
+        choice = input("Enter your choice: ").strip()
+
+        if choice == "1":
+            view_employees()
+        elif choice == "2":
+            view_leave_requests()
+        elif choice == "3":
+            view_tasks()
+        elif choice == "4":
+            view_notifications()
+        elif choice == "5":
+            run_coverage()
+        elif choice == "0":
+            print("Exiting WorkMesh. Goodbye!")
+        elif choice == "6":
+            apply_leave_menu()
+        elif choice == "7":
+            view_leave_menu()
+        elif choice == "8":
+            review_leave_menu()    
+            break
+        else:
+            print("Invalid choice. Please select a listed option.")
+
+
+if __name__ == "__main__":
+    main()
+
+    
+def apply_leave_menu():
+    try:
+        employee_id = int(input("Enter employee ID: "))
+    except ValueError:
+        print("Invalid employee ID. Enter a number.")
+        return
+
+    from_date = input("Leave start date (YYYY-MM-DD): ").strip()
+    to_date = input("Leave end date (YYYY-MM-DD): ").strip()
+    reason = input("Reason for leave: ").strip()
+
+    result = apply_leave(employee_id, from_date, to_date, reason)
+    print(result["message"])
+
+    if result.get("success"):
+        print("Request ID:", result["request"]["id"])
+        print("Status: pending")
+
+
+def view_leave_menu():
+    print("\n1. View all requests")
+    print("2. View pending requests")
+    print("3. View approved requests")
+    print("4. View rejected requests")
+
+    choice = input("Choose an option: ").strip()
+
+    statuses = {
+        "1": None,
+        "2": "pending",
+        "3": "approved",
+        "4": "rejected",
+    }
+
+    if choice not in statuses:
+        print("Invalid choice.")
+        return
+
+    requests = view_leave_requests(statuses[choice])
+
+    if not requests:
+        print("No leave requests found.")
+        return
+
+    for request in requests:
+        print(
+            f"ID: {request['id']} | "
+            f"Employee: {request['employee_name']} | "
+            f"Dates: {request['from_date']} to {request['to_date']} | "
+            f"Days: {request.get('days', 'N/A')} | "
+            f"Status: {request['status']}"
+        )
+
+
+def review_leave_menu():
+    requests = view_leave_requests("pending")
+
+    if not requests:
+        print("No pending requests to review.")
+        return
+
+    for request in requests:
+        print(
+            f"ID: {request['id']} | "
+            f"Employee: {request['employee_name']} | "
+            f"Dates: {request['from_date']} to {request['to_date']} | "
+            f"Days: {request.get('days', 'N/A')}"
+        )
+
+    try:
+        request_id = int(input("Enter request ID to review: "))
+    except ValueError:
+        print("Invalid request ID.")
+        return
+
+    print("1. Approve")
+    print("2. Reject")
+
+    decision = input("Choose an action: ").strip()
+
+    decisions = {"1": "approved", "2": "rejected"}
+
+    if decision not in decisions:
+        print("Invalid action.")
+        return
+
+    result = review_leave(request_id, decisions[decision])
+    print(result["message"])
+
