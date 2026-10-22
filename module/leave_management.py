@@ -138,7 +138,16 @@ def view_leave_requests(status=None):
     ]
 
 
-def review_leave(request_id, decision):
+def review_leave(request_id, decision, reviewer_role=None):
+    """Approve or reject a pending request; managers/admins only."""
+
+    if reviewer_role not in {"manager", "admin"}:
+        return {
+            "success": False,
+            "message": "Only managers and admins can review leave requests."
+        }
+
+    decision = decision.strip().lower()
     """Approve or reject a pending request."""
     decision = decision.strip().lower()
 

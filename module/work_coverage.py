@@ -263,19 +263,26 @@ def view_notifications(employee_id):
 
     return my_notifications
 
-
-def mark_notification_as_read(notification_id):
-    """Change a notification's status to 'read'. Returns True if it worked."""
+def mark_notification_as_read(notification_id, employee_id=None):
+    """Mark a notification as read, optionally verifying employee ownership."""
     notifications = load_notifications()
 
     for notification in notifications:
-        if notification["id"] == notification_id:
+        if str(notification.get("id")) == str(notification_id):
+
+            # If an employee ID is supplied, verify notification ownership.
+            if employee_id is not None:
+                if str(notification.get("employee_id")) != str(employee_id):
+                    print("Warning: notification ownership check failed")
+                    return False
+
             notification["status"] = "read"
             return save_json("notifications.json", notifications)
 
     print(f"Warning: notification {notification_id} not found")
     return False
 
+    
     # How much extra workload (in percent) one reassigned task adds to a person
 WORKLOAD_PER_TASK = 10
 
